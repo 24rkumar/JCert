@@ -16,7 +16,7 @@ import java.util.Base64;
 
 public class KeyManager {
     final File publicKeyFile = new File("public.key");
-    final File privateKeyFile = new File("keys\\private.key");
+    final File privateKeyFile = new File("keys" + File.separator + "private.key");
 
     PublicKey publicKey;
     PrivateKey privateKey;
