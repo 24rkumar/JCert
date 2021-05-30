@@ -1,3 +1,9 @@
-/FileIntegrityValidator.iml
+# Intellij files
+/JCert.iml
 /out/
 /.idea/
+
+# Application-generated files
+/output/
+/public.key
+/keys/

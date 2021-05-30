@@ -1,33 +1,32 @@
 package main;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Base64;
 
 public class KeyManager {
-    final File publicKeyFile = new File("public.key");
-    final File privateKeyFile = new File("keys" + File.separator + "private.key");
+    final private File publicKeyFile = new File("public.key");
+    final private File privateKeyFile = new File("keys", "private.key");
 
-    PublicKey publicKey;
-    PrivateKey privateKey;
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
 
-    public void generateKeys() throws NoSuchAlgorithmException, IOException {
+    public void generateKeys() throws GeneralSecurityException, IOException {
         if(publicKeyFile.isFile()) {
             publicKeyFile.delete();
         }
         if(privateKeyFile.isFile()) {
             privateKeyFile.delete();
         }
+
+        publicKeyFile.createNewFile();
+        privateKeyFile.createNewFile();
 
         FileWriter publicKeyWriter = new FileWriter(publicKeyFile);
         FileWriter privateKeyWriter = new FileWriter(publicKeyFile);
@@ -46,7 +45,7 @@ public class KeyManager {
         privateKeyWriter.close();
     }
 
-    public void refreshKeys() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public void refreshKeys() throws IOException, GeneralSecurityException {
         byte[] publicKeyBytes = Base64.getDecoder().decode(Files.readAllBytes(publicKeyFile.toPath()));
         byte[] privateKeyBytes = Base64.getDecoder().decode(Files.readAllBytes(privateKeyFile.toPath()));
 
@@ -60,16 +59,14 @@ public class KeyManager {
         return publicKeyFile.isFile() && privateKeyFile.isFile();
     }
 
-    public byte[] encrypt(byte[] message) throws
-            NoSuchPaddingException,
-            NoSuchAlgorithmException,
-            InvalidKeyException,
-            IllegalBlockSizeException,
-            BadPaddingException
-    {
+    public byte[] encrypt(byte[] message) throws GeneralSecurityException {
         Cipher encryptCipher = Cipher.getInstance("RSA");
         encryptCipher.init(Cipher.ENCRYPT_MODE, privateKey);
 
         return encryptCipher.doFinal(message);
+    }
+
+    public byte[] getEncodedPublicKey() throws IOException {
+        return Files.readAllBytes(publicKeyFile.toPath());
     }
 }
