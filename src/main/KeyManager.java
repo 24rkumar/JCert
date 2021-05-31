@@ -6,8 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class KeyManager {
@@ -29,7 +29,7 @@ public class KeyManager {
         privateKeyFile.createNewFile();
 
         FileWriter publicKeyWriter = new FileWriter(publicKeyFile);
-        FileWriter privateKeyWriter = new FileWriter(publicKeyFile);
+        FileWriter privateKeyWriter = new FileWriter(privateKeyFile);
 
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
@@ -38,8 +38,8 @@ public class KeyManager {
         publicKey = keyPair.getPublic();
         privateKey = keyPair.getPrivate();
 
-        publicKeyWriter.write(Arrays.toString(Base64.getEncoder().encode(publicKey.getEncoded())));
-        privateKeyWriter.write(Arrays.toString(Base64.getEncoder().encode(privateKey.getEncoded())));
+        publicKeyWriter.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+        privateKeyWriter.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
 
         publicKeyWriter.close();
         privateKeyWriter.close();
@@ -52,7 +52,7 @@ public class KeyManager {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
         publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
-        privateKey = keyFactory.generatePrivate(new X509EncodedKeySpec(privateKeyBytes));
+        privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
     }
 
     public boolean keyExists() {

@@ -14,48 +14,56 @@ import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class PublicKeyManager {
-    public boolean savedKeyExists(String keyHash) {
+    public static PublicKey getKeyFromFile(File file) throws GeneralSecurityException, IOException{
+        return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(
+                Base64.getDecoder().decode(Files.readAllBytes(file.toPath()))
+        ));
+    }
+
+    public static boolean savedKeyExists(String keyHash) {
         return new File("keys", keyHash + ".key").isFile();
     }
 
-    public void savePublicKey(PublicKey key, String name) throws GeneralSecurityException, IOException {
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+
+        return sb.toString();
+    }
+
+    public static void savePublicKey(PublicKey key, String name) throws GeneralSecurityException, IOException {
         byte[] encodedKey = Base64.getEncoder().encode(key.getEncoded());
-        byte[] keyHash = MessageDigest.getInstance("SHA-256").digest(encodedKey);
+        String keyHash = toHex(MessageDigest.getInstance("SHA-256").digest(encodedKey));
 
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("name", name);
-        jsonObject.put("key", Arrays.toString(encodedKey));
+        jsonObject.put("key", new String(encodedKey));
 
-        File keyFile = new File("keys", Arrays.toString(keyHash) + ".key");
+        File keyFile = new File("keys", keyHash + ".key");
         keyFile.createNewFile();
         FileWriter keyWriter = new FileWriter(keyFile);
         keyWriter.write(jsonObject.toString());
         keyWriter.close();
     }
 
-    public PublicKey getSavedKey(String keyHash) throws IOException, GeneralSecurityException, ParseException {
+    public static PublicKey getSavedKey(String keyHash) throws IOException, GeneralSecurityException, ParseException {
         return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(
                 Base64.getDecoder().decode(
                         ((JSONObject) new JSONParser().parse(
-                                Arrays.toString(
-                                        Files.readAllBytes(Path.of("keys", keyHash + ".key"))
-                                )
+                                new String(Files.readAllBytes(Path.of("keys", keyHash + ".key")))
                         )).get("key").toString()
                 ))
         );
     }
 
-    public String getSavedKeyName(String keyHash) throws IOException, ParseException {
+    public static String getSavedKeyName(String keyHash) throws IOException, ParseException {
         return ((JSONObject) new JSONParser().parse(
-                Arrays.toString(Files.readAllBytes(Path.of("keys", keyHash + ".key")))
+                new String(Files.readAllBytes(Path.of("keys", keyHash + ".key")))
         )).get("name").toString();
-    }
-
-    public void deleteSavedKey(String keyHash) {
-        new File("keys", keyHash + ".key").delete();
     }
 }
